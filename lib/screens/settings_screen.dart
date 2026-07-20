@@ -4,9 +4,90 @@ import 'package:flutter/services.dart';
 import '../database/database_helper.dart';
 import '../models/habit.dart';
 import '../models/completion.dart';
+import '../services/purchase_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
+      body: ListView(
+        children: [
+          const _SectionHeader('Data'),
+          ListTile(
+            leading: const Icon(Icons.upload),
+            title: const Text('Export Data'),
+            subtitle: const Text('Copy habit data to clipboard'),
+            onTap: () => _exportData(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Import Data'),
+            subtitle: const Text('Paste habit data from clipboard'),
+            onTap: () => _importData(context),
+          ),
+          const Divider(),
+          const _SectionHeader('Support'),
+          SwitchListTile(
+            secondary: const Icon(Icons.remove_circle_outline),
+            title: const Text('Remove Ads'),
+            subtitle: Text(PurchaseService.adsRemoved
+                ? 'Ads removed — thank you!'
+                : 'One-time purchase to remove ads'),
+            value: PurchaseService.adsRemoved,
+            onChanged: PurchaseService.adsRemoved
+                ? null
+                : (value) => _purchaseRemoveAds(context),
+          ),
+          if (!PurchaseService.adsRemoved)
+            ListTile(
+              leading: const Icon(Icons.restore),
+              title: const Text('Restore Purchases'),
+              onTap: () async {
+                await PurchaseService.restorePurchases();
+                setState(() {});
+              },
+            ),
+          const Divider(),
+          const _SectionHeader('About'),
+          const ListTile(
+            leading: Icon(Icons.info_outline),
+            title: Text('HabitLoop'),
+            subtitle: Text('v1.0.0 — Free & Open Source'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _purchaseRemoveAds(BuildContext context) async {
+    final product = await PurchaseService.getProduct();
+    if (product == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Product not available')),
+        );
+      }
+      return;
+    }
+    final success = await PurchaseService.buyRemoveAds(product);
+    if (!success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Purchase failed')),
+      );
+    }
+    setState(() {});
+  }
 
   Future<void> _exportData(BuildContext context) async {
     final habits = await DatabaseHelper.instance.getHabits();
@@ -65,40 +146,6 @@ class SettingsScreen extends StatelessWidget {
         );
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: ListView(
-        children: [
-          const _SectionHeader('Data'),
-          ListTile(
-            leading: const Icon(Icons.upload),
-            title: const Text('Export Data'),
-            subtitle: const Text('Copy habit data to clipboard'),
-            onTap: () => _exportData(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.download),
-            title: const Text('Import Data'),
-            subtitle: const Text('Paste habit data from clipboard'),
-            onTap: () => _importData(context),
-          ),
-          const Divider(),
-          const _SectionHeader('About'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('HabitLoop'),
-            subtitle: Text('v1.0.0 — Free & Open Source'),
-          ),
-        ],
-      ),
-    );
   }
 }
 
