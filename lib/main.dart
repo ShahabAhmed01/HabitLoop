@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/ad_service.dart';
 import 'services/purchase_service.dart';
 import 'services/notification_service.dart';
+import 'utils/app_themes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,17 +23,65 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HabitLoop',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+      theme: AppThemes.forestLight,
+      darkTheme: AppThemes.midnightDark,
+      themeMode: ThemeMode.system,
+      home: const ThemeProvider(),
+    );
+  }
+}
+
+class ThemeProvider extends StatefulWidget {
+  const ThemeProvider({super.key});
+
+  @override
+  State<ThemeProvider> createState() => _ThemeProviderState();
+}
+
+class _ThemeProviderState extends State<ThemeProvider> {
+  ThemeEntry _currentTheme = ThemeEntry.all[0]; // Forest (light)
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('theme_name');
+    if (name != null) {
+      setState(() => _currentTheme = ThemeEntry.byName(name));
+    }
+  }
+
+  void _onThemeChanged(ThemeEntry entry) {
+    setState(() => _currentTheme = entry);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'HabitLoop',
+      theme: _currentTheme.theme,
+      debugShowCheckedModeBanner: false,
+      home: MainShell(
+        onThemeChanged: _onThemeChanged,
+        currentTheme: _currentTheme,
       ),
-      home: const MainShell(),
     );
   }
 }
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key});
+  final ValueChanged<ThemeEntry> onThemeChanged;
+  final ThemeEntry currentTheme;
+
+  const MainShell({
+    super.key,
+    required this.onThemeChanged,
+    required this.currentTheme,
+  });
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -40,10 +90,13 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    HomeScreen(),
-    StatsScreen(),
-    SettingsScreen(),
+  late final List<Widget> _screens = [
+    const HomeScreen(),
+    const StatsScreen(),
+    SettingsScreen(
+      currentTheme: widget.currentTheme,
+      onThemeChanged: widget.onThemeChanged,
+    ),
   ];
 
   @override

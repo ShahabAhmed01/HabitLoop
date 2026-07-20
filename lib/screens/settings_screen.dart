@@ -5,9 +5,18 @@ import '../database/database_helper.dart';
 import '../models/habit.dart';
 import '../models/completion.dart';
 import '../services/purchase_service.dart';
+import '../utils/app_themes.dart';
+import 'theme_picker_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  final ThemeEntry currentTheme;
+  final ValueChanged<ThemeEntry> onThemeChanged;
+
+  const SettingsScreen({
+    super.key,
+    required this.currentTheme,
+    required this.onThemeChanged,
+  });
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -23,6 +32,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
+          const _SectionHeader('Appearance'),
+          ListTile(
+            leading: const Icon(Icons.palette),
+            title: const Text('Theme'),
+            subtitle: Text(widget.currentTheme.name),
+            trailing: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            onTap: () async {
+              final result = await Navigator.push<ThemeEntry>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ThemePickerScreen(
+                    currentTheme: widget.currentTheme,
+                    onThemeChanged: widget.onThemeChanged,
+                  ),
+                ),
+              );
+              if (result != null) {
+                widget.onThemeChanged(result);
+              }
+            },
+          ),
+          const Divider(),
           const _SectionHeader('Data'),
           ListTile(
             leading: const Icon(Icons.upload),
