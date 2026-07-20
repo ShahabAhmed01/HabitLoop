@@ -2,7 +2,7 @@
 Last updated: 2026-07-20 · Updated by: session ses_0857227a2ffe
 
 ## 0. Read Me First
-HabitLoop is a free, open-source, local-first habit tracker built with Flutter for Android. Phases 0-2 are complete — all core features built, ads/IAP services added, privacy policy drafted, release build configured. 11 tests passing. The user needs to: run `flutter run` to verify the app on emulator, then complete Phase 3 (compliance) and Phase 4 (publishing) which require their direct action ($25 Play Console fee, keystore generation, real AdMob/Play Billing setup, recruiting testers).
+HabitLoop is a free, open-source, local-first habit tracker built with Flutter for Android. Phases 0-2 are complete and all Phase 1 features (Steps 1-10) are coded. 11 tests passing. The user needs to: run `flutter run` to verify the app on emulator, then complete Phase 3 (compliance) and Phase 4 (publishing) which require their direct action ($25 Play Console fee, keystore generation, real AdMob/Play Billing setup, recruiting testers).
 
 ## 1. Project Identity
 - **App name**: HabitLoop
@@ -40,7 +40,7 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
   - [x] Step 5: Streaks — current + best, 7 passing tests
   - [x] Step 6: History view — contribution grid per habit
   - [x] Step 7: Stats screen — overview across all habits
-  - [ ] Step 8: Notifications — NOT YET IMPLEMENTED
+  - [x] Step 8: Notifications — flutter_local_notifications, reminder picker, permissions
   - [x] Step 9: Settings — export/import, remove ads toggle
   - [x] Step 10: Polish — empty states, delete confirmations, swipe-to-delete
 - [x] **Phase 2 — Monetization** (Steps 11-12)
@@ -88,7 +88,6 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
 2. **Step 8 — Notifications**: Should I add `flutter_local_notifications` now, or wait until after you've tested the current build?
 
 ## 8. Known Issues & Technical Debt
-- **Step 8 NOT DONE**: Notifications (flutter_local_notifications) not yet implemented — guide Step 8
 - Android SDK copied to `C:\Android\sdk` — original at `C:\Users\Shahab Ahmed\AppData\Local\Android\sdk` still exists
 - `gh` CLI not in PATH — must use full path `C:\Program Files\GitHub CLI\gh.exe`
 - Ad unit IDs are Google's test IDs — must be replaced with real IDs from AdMob console before publishing
