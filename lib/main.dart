@@ -4,9 +4,11 @@ import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/ad_service.dart';
 import 'services/purchase_service.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   await AdService.init();
   await PurchaseService.init();
   runApp(const MyApp());

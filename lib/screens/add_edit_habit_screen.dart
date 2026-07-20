@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../database/database_helper.dart';
 import '../models/habit.dart';
+import '../services/notification_service.dart';
 
 class AddEditHabitScreen extends StatefulWidget {
   final Habit? habit;
@@ -17,6 +18,8 @@ class _AddEditHabitScreenState extends State<AddEditHabitScreen> {
   String _frequency = 'daily';
   int _selectedColor = 0xFF6750A4;
   String? _selectedIcon;
+  bool _reminderEnabled = false;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
 
   static const List<Color> _colorOptions = [
     Color(0xFF6750A4),
@@ -72,13 +75,38 @@ class _AddEditHabitScreenState extends State<AddEditHabitScreen> {
       createdAt: widget.habit?.createdAt,
     );
 
+    int habitId;
     if (widget.habit == null) {
-      await DatabaseHelper.instance.insertHabit(habit);
+      habitId = await DatabaseHelper.instance.insertHabit(habit);
     } else {
+      habitId = widget.habit!.id!;
       await DatabaseHelper.instance.updateHabit(habit);
     }
 
+    // Handle notification
+    if (_reminderEnabled) {
+      await NotificationService.requestPermission();
+      await NotificationService.scheduleHabitReminder(
+        habitId: habitId,
+        habitName: habit.name,
+        hour: _reminderTime.hour,
+        minute: _reminderTime.minute,
+      );
+    } else {
+      await NotificationService.cancelReminder(habitId);
+    }
+
     if (mounted) Navigator.pop(context, true);
+  }
+
+  Future<void> _pickTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminderTime,
+    );
+    if (picked != null) {
+      setState(() => _reminderTime = picked);
+    }
   }
 
   @override
@@ -179,6 +207,25 @@ class _AddEditHabitScreenState extends State<AddEditHabitScreen> {
                 setState(() => _frequency = selected.first);
               },
             ),
+            const SizedBox(height: 24),
+            SwitchListTile(
+              title: const Text('Set Reminder'),
+              subtitle: Text(_reminderEnabled
+                  ? 'Daily at ${_reminderTime.format(context)}'
+                  : 'No reminder set'),
+              value: _reminderEnabled,
+              onChanged: (value) {
+                setState(() => _reminderEnabled = value);
+                if (value) _pickTime();
+              },
+            ),
+            if (_reminderEnabled)
+              ListTile(
+                leading: const Icon(Icons.access_time),
+                title: const Text('Reminder Time'),
+                subtitle: Text(_reminderTime.format(context)),
+                onTap: _pickTime,
+              ),
             const SizedBox(height: 32),
             FilledButton(
               onPressed: _save,
