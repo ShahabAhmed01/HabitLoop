@@ -23,9 +23,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HabitLoop',
-      theme: AppThemes.forestLight,
-      darkTheme: AppThemes.midnightDark,
-      themeMode: ThemeMode.system,
+      debugShowCheckedModeBanner: false,
       home: const ThemeProvider(),
     );
   }
@@ -39,7 +37,8 @@ class ThemeProvider extends StatefulWidget {
 }
 
 class _ThemeProviderState extends State<ThemeProvider> {
-  ThemeEntry _currentTheme = ThemeEntry.all[0]; // Forest (light)
+  String _themeName = 'Forest';
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
@@ -50,37 +49,78 @@ class _ThemeProviderState extends State<ThemeProvider> {
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString('theme_name');
-    if (name != null) {
-      setState(() => _currentTheme = ThemeEntry.byName(name));
+    final mode = prefs.getString('dark_mode');
+    setState(() {
+      if (name != null) _themeName = name;
+      _themeMode = _parseThemeMode(mode ?? 'system');
+    });
+  }
+
+  ThemeMode _parseThemeMode(String value) {
+    switch (value) {
+      case 'light':
+        return ThemeMode.light;
+      case 'dark':
+        return ThemeMode.dark;
+      default:
+        return ThemeMode.system;
     }
   }
 
-  void _onThemeChanged(ThemeEntry entry) {
-    setState(() => _currentTheme = entry);
+  String _themeModeToString(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.light:
+        return 'light';
+      case ThemeMode.dark:
+        return 'dark';
+      case ThemeMode.system:
+        return 'system';
+    }
+  }
+
+  void _onThemeChanged(String name) async {
+    setState(() => _themeName = name);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_name', name);
+  }
+
+  void _onDarkModeChanged(ThemeMode mode) async {
+    setState(() => _themeMode = mode);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('dark_mode', _themeModeToString(mode));
   }
 
   @override
   Widget build(BuildContext context) {
+    // Build a MaterialApp that provides the theme to the inner ThemeProvider
     return MaterialApp(
       title: 'HabitLoop',
-      theme: _currentTheme.theme,
       debugShowCheckedModeBanner: false,
+      theme: AppThemes.getTheme(_themeName, Brightness.light),
+      darkTheme: AppThemes.getTheme(_themeName, Brightness.dark),
+      themeMode: _themeMode,
       home: MainShell(
+        themeName: _themeName,
+        themeMode: _themeMode,
         onThemeChanged: _onThemeChanged,
-        currentTheme: _currentTheme,
+        onDarkModeChanged: _onDarkModeChanged,
       ),
     );
   }
 }
 
 class MainShell extends StatefulWidget {
-  final ValueChanged<ThemeEntry> onThemeChanged;
-  final ThemeEntry currentTheme;
+  final String themeName;
+  final ThemeMode themeMode;
+  final ValueChanged<String> onThemeChanged;
+  final ValueChanged<ThemeMode> onDarkModeChanged;
 
   const MainShell({
     super.key,
+    required this.themeName,
+    required this.themeMode,
     required this.onThemeChanged,
-    required this.currentTheme,
+    required this.onDarkModeChanged,
   });
 
   @override
@@ -90,19 +130,21 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens = [
-    const HomeScreen(),
-    const StatsScreen(),
-    SettingsScreen(
-      currentTheme: widget.currentTheme,
-      onThemeChanged: widget.onThemeChanged,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      const HomeScreen(),
+      const StatsScreen(),
+      SettingsScreen(
+        themeName: widget.themeName,
+        themeMode: widget.themeMode,
+        onThemeChanged: widget.onThemeChanged,
+        onDarkModeChanged: widget.onDarkModeChanged,
+      ),
+    ];
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),

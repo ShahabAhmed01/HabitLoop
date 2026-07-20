@@ -3,13 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_themes.dart';
 
 class ThemePickerScreen extends StatefulWidget {
-  final ThemeEntry currentTheme;
-  final ValueChanged<ThemeEntry> onThemeChanged;
+  final String currentName;
+  final ValueChanged<String> onSelected;
 
   const ThemePickerScreen({
     super.key,
-    required this.currentTheme,
-    required this.onThemeChanged,
+    required this.currentName,
+    required this.onSelected,
   });
 
   @override
@@ -17,173 +17,120 @@ class ThemePickerScreen extends StatefulWidget {
 }
 
 class _ThemePickerScreenState extends State<ThemePickerScreen> {
-  late ThemeEntry _selected;
+  late String _selected;
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.currentTheme;
+    _selected = widget.currentName;
   }
 
-  Future<void> _selectTheme(ThemeEntry entry) async {
-    setState(() => _selected = entry);
+  Future<void> _select(String name) async {
+    setState(() => _selected = name);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('theme_name', entry.name);
-    widget.onThemeChanged(entry);
+    await prefs.setString('theme_name', name);
+    widget.onSelected(name);
   }
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose Theme'),
+        title: const Text('Color Theme'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
-        children: [
-          const _SectionTitle('Light'),
-          const SizedBox(height: 8),
-          ...AppThemes.lightThemes.asMap().entries.map((entry) {
-            final i = entry.key;
-            final theme = entry.value;
-            final themeEntry = ThemeEntry.all[i];
-            final isSelected = _selected.name == themeEntry.name;
-            return _ThemeTile(
-              themeEntry: themeEntry,
-              theme: theme,
-              isSelected: isSelected,
-              onTap: () => _selectTheme(themeEntry),
-            );
-          }),
-          const SizedBox(height: 24),
-          const _SectionTitle('Dark'),
-          const SizedBox(height: 8),
-          ...AppThemes.darkThemes.asMap().entries.map((entry) {
-            final i = entry.key;
-            final theme = entry.value;
-            final themeEntry = ThemeEntry.all[i + 4];
-            final isSelected = _selected.name == themeEntry.name;
-            return _ThemeTile(
-              themeEntry: themeEntry,
-              theme: theme,
-              isSelected: isSelected,
-              onTap: () => _selectTheme(themeEntry),
-            );
-          }),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-}
-
-class _ThemeTile extends StatelessWidget {
-  final ThemeEntry themeEntry;
-  final ThemeData theme;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ThemeTile({
-    required this.themeEntry,
-    required this.theme,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = theme.colorScheme;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 80,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: cs.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.check, color: cs.onPrimary, size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        children: AppThemes.themeNames.map((name) {
+          final theme = AppThemes.getTheme(name, brightness);
+          final cs = theme.colorScheme;
+          final isSelected = _selected == name;
+          return Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _select(name),
+              child: Container(
+                height: 88,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
                   children: [
-                    Text(
-                      themeEntry.name,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
+                    // Color preview block
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: cs.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.check, color: cs.onPrimary, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    // Name + description
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          // Preview dots
+                          Row(
+                            children: [
+                              _Dot(color: cs.primary),
+                              const SizedBox(width: 6),
+                              _Dot(color: cs.secondary),
+                              const SizedBox(width: 6),
+                              _Dot(color: cs.tertiary),
+                              const SizedBox(width: 10),
+                              Text(
+                                brightness == Brightness.dark ? 'Dark variant' : 'Light variant',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: cs.onSurface.withValues(alpha: 0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      themeEntry.isDark ? 'Dark theme' : 'Light theme',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: cs.onSurface.withValues(alpha: 0.6),
-                      ),
-                    ),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: cs.primary, size: 26),
                   ],
                 ),
               ),
-              if (isSelected)
-                Icon(Icons.check_circle, color: cs.primary, size: 24),
-              const SizedBox(width: 8),
-              // Color preview dots
-              Row(
-                children: [
-                  _ColorDot(color: cs.primary),
-                  const SizedBox(width: 4),
-                  _ColorDot(color: cs.secondary),
-                  const SizedBox(width: 4),
-                  _ColorDot(color: cs.tertiary),
-                ],
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-class _ColorDot extends StatelessWidget {
+class _Dot extends StatelessWidget {
   final Color color;
-  const _ColorDot({required this.color});
+  const _Dot({required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 12,
-      height: 12,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).colorScheme.primary,
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant,
+          width: 1,
+        ),
       ),
     );
   }

@@ -5,17 +5,20 @@ import '../database/database_helper.dart';
 import '../models/habit.dart';
 import '../models/completion.dart';
 import '../services/purchase_service.dart';
-import '../utils/app_themes.dart';
 import 'theme_picker_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final ThemeEntry currentTheme;
-  final ValueChanged<ThemeEntry> onThemeChanged;
+  final String themeName;
+  final ThemeMode themeMode;
+  final ValueChanged<String> onThemeChanged;
+  final ValueChanged<ThemeMode> onDarkModeChanged;
 
   const SettingsScreen({
     super.key,
-    required this.currentTheme,
+    required this.themeName,
+    required this.themeMode,
     required this.onThemeChanged,
+    required this.onDarkModeChanged,
   });
 
   @override
@@ -23,6 +26,17 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String _darkModeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'Match System';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,35 +46,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       body: ListView(
         children: [
+          // ── Appearance ──
           const _SectionHeader('Appearance'),
           ListTile(
             leading: const Icon(Icons.palette),
-            title: const Text('Theme'),
-            subtitle: Text(widget.currentTheme.name),
+            title: const Text('Color Theme'),
+            subtitle: Text(widget.themeName),
             trailing: Container(
-              width: 24,
-              height: 24,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
             onTap: () async {
-              final result = await Navigator.push<ThemeEntry>(
+              final result = await Navigator.push<String>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => ThemePickerScreen(
-                    currentTheme: widget.currentTheme,
-                    onThemeChanged: widget.onThemeChanged,
+                    currentName: widget.themeName,
+                    onSelected: widget.onThemeChanged,
                   ),
                 ),
               );
-              if (result != null) {
-                widget.onThemeChanged(result);
-              }
+              if (result != null) widget.onThemeChanged(result);
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.dark_mode),
+            title: const Text('Dark Mode'),
+            subtitle: Text(_darkModeLabel(widget.themeMode)),
+            trailing: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  icon: Icon(Icons.brightness_auto, size: 18),
+                  label: Text('Auto'),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  icon: Icon(Icons.light_mode, size: 18),
+                  label: Text('Light'),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  icon: Icon(Icons.dark_mode, size: 18),
+                  label: Text('Dark'),
+                ),
+              ],
+              selected: {widget.themeMode},
+              onSelectionChanged: (selected) {
+                widget.onDarkModeChanged(selected.first);
+              },
+            ),
+          ),
           const Divider(),
+
+          // ── Data ──
           const _SectionHeader('Data'),
           ListTile(
             leading: const Icon(Icons.upload),
@@ -75,6 +118,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: () => _importData(context),
           ),
           const Divider(),
+
+          // ── Support ──
           const _SectionHeader('Support'),
           SwitchListTile(
             secondary: const Icon(Icons.remove_circle_outline),
@@ -97,6 +142,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           const Divider(),
+
+          // ── About ──
           const _SectionHeader('About'),
           const ListTile(
             leading: Icon(Icons.info_outline),
@@ -135,8 +182,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     };
 
     for (final habit in habits) {
-      final completions = await DatabaseHelper.instance.getCompletionsForHabit(habit.id!);
-      (exportData['completions'] as List).addAll(completions.map((c) => c.toMap()));
+      final completions =
+          await DatabaseHelper.instance.getCompletionsForHabit(habit.id!);
+      (exportData['completions'] as List)
+          .addAll(completions.map((c) => c.toMap()));
     }
 
     final json = const JsonEncoder.withIndent('  ').convert(exportData);
@@ -162,8 +211,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final json = jsonDecode(data!.text!) as Map<String, dynamic>;
-      final habits = (json['habits'] as List).map((m) => Habit.fromMap(m)).toList();
-      final completions = (json['completions'] as List).map((m) => Completion.fromMap(m)).toList();
+      final habits =
+          (json['habits'] as List).map((m) => Habit.fromMap(m)).toList();
+      final completions = (json['completions'] as List)
+          .map((m) => Completion.fromMap(m))
+          .toList();
 
       for (final habit in habits) {
         await DatabaseHelper.instance.insertHabit(habit);
