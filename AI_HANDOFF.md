@@ -2,7 +2,7 @@
 Last updated: 2026-07-20 · Updated by: session ses_0857227a2ffe
 
 ## 0. Read Me First
-HabitLoop is a free, open-source, local-first habit tracker built with Flutter for Android. Phase 0 (setup) is complete — environment is working, GitHub repo is live, Flutter app is scaffolded. The next step is Phase 1, Step 1: confirm the default app runs on an emulator.
+HabitLoop is a free, open-source, local-first habit tracker built with Flutter for Android. Phase 0 is complete and Step 1 (scaffold) passes tests. Step 2 (data layer) is in progress — sqflite chosen as the database engine. Next: build the home screen (Step 3).
 
 ## 1. Project Identity
 - **App name**: HabitLoop
@@ -17,7 +17,7 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
 ## 2. Tech Stack & Key Decisions
 - **Framework**: Flutter 3.44.6 (stable channel)
 - **Language**: Dart
-- **Local DB**: (not yet chosen — guide says sqflite or Isar/Hive, decide at Step 2)
+- **Local DB**: sqflite 2.4.3 (SQL-based, chosen for Step 2)
 - **Notifications**: flutter_local_notifications (planned)
 - **Ads**: google_mobile_ads (planned)
 - **Billing**: in_app_purchase (planned)
@@ -27,12 +27,14 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
 2026-07-20 | License: MIT | MIT vs GPLv3 | Permissive, minimal obligations
 2026-07-20 | Repo visibility: Public | Public vs Private | Matches open-source goal
 2026-07-20 | Android SDK moved to C:\Android\sdk | Original path had spaces breaking NDK | Fixed during setup
+2026-07-20 | DB engine: sqflite | sqflite vs Isar vs Hive | SQL-based, most tutorials reference it
 
 ## 3. Current Status Snapshot
 - [x] **Phase 0 — Setup**: Environment confirmed, repo created, app scaffolded
-- [ ] **Phase 1 — Core App** (Steps 1-10): Not started
-  - [ ] Step 1: Scaffold — default app runs
-  - [ ] Step 2: Data layer (Habit + Completion models + local DB)
+- [ ] **Phase 1 — Core App** (Steps 1-10)
+  - [x] Step 1: Scaffold — default app runs (flutter test passes)
+  - [x] Step 2: Data layer — Habit + Completion models, sqflite DB, 4 tests passing
+  - [ ] Step 3: Home screen (list + tap-to-complete)
   - [ ] Step 3: Home screen (list + tap-to-complete)
   - [ ] Step 4: Add/Edit habit screen
   - [ ] Step 5: Streaks (current + best)
@@ -46,12 +48,15 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
 - [ ] **Phase 4 — Publishing**
 
 ## 4. Feature Log
-(No features built yet — scaffolding just completed)
+2026-07-20 | Step 1: Initial scaffold | Default Flutter app, flutter test passes | Commit 2da1c03
+2026-07-20 | Step 2: Data layer | Habit model, Completion model, DatabaseHelper with sqflite, 4 tests passing | lib/models/, lib/database/, test/database_test.dart
 
 ## 5. Architecture Snapshot
-- **Folder structure**: Standard Flutter scaffold (`lib/main.dart`, `android/`, `ios/`, etc.)
-- **Data schema**: Not yet defined (Step 2)
-- **State management**: Not yet chosen (Step 2)
+- **Folder structure**: `lib/main.dart`, `lib/models/` (habit.dart, completion.dart), `lib/database/` (database_helper.dart)
+- **Data schema**:
+  - `habits`: id, name, icon, color, frequency, created_at
+  - `completions`: id, habit_id, date (UNIQUE on habit_id+date)
+- **State management**: Not yet chosen (Step 3+)
 
 ## 6. Security & Privacy Checklist State
 - [ ] Never commit secrets (key.properties, *.jks, *.keystore, .env) — .gitignore updated
@@ -70,11 +75,12 @@ HabitLoop is a free, open-source, local-first habit tracker built with Flutter f
 
 ## 9. Changelog
 2026-07-20 | Initial setup: Flutter scaffolded, GitHub repo created, AGENTS.md/AI_HANDOFF.md created
+2026-07-20 | Data layer: sqflite DB with Habit/Completion models, 4 passing tests
 
 ## 10. Next Steps
-1. **Immediate**: Run the default Flutter app on emulator (Phase 1, Step 1)
-2. **Then**: Choose DB engine (sqflite vs Isar) and build data layer (Step 2)
-3. **After that**: Home screen with tap-to-complete (Step 3)
+1. **Immediate**: Build home screen with habit list and tap-to-complete (Phase 1, Step 3)
+2. **Then**: Add/Edit habit screen (Step 4)
+3. **After that**: Streak calculation (Step 5)
 
 ## 11. Operating Rules for Any AI Working on This Project
 
