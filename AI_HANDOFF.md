@@ -1,0 +1,93 @@
+# AI_HANDOFF.md — HabitLoop Project State
+Last updated: 2026-07-20 · Updated by: session ses_0857227a2ffe
+
+## 0. Read Me First
+HabitLoop is a free, open-source, local-first habit tracker built with Flutter for Android. Phase 0 (setup) is complete — environment is working, GitHub repo is live, Flutter app is scaffolded. The next step is Phase 1, Step 1: confirm the default app runs on an emulator.
+
+## 1. Project Identity
+- **App name**: HabitLoop
+- **Tagline**: (TBD)
+- **Package ID**: com.habitloop.habitloop
+- **GitHub repo**: https://github.com/ShahabAhmed01/HabitLoop
+- **License**: MIT
+- **Target platform**: Android only (for now)
+- **Current version**: 0.0.0 (pre-development)
+- **Definition of done for v1**: Every Phase 1-4 box checked, `flutter test` passes, app runs clean on a real device, security checklist fully green, production release live on Play Store.
+
+## 2. Tech Stack & Key Decisions
+- **Framework**: Flutter 3.44.6 (stable channel)
+- **Language**: Dart
+- **Local DB**: (not yet chosen — guide says sqflite or Isar/Hive, decide at Step 2)
+- **Notifications**: flutter_local_notifications (planned)
+- **Ads**: google_mobile_ads (planned)
+- **Billing**: in_app_purchase (planned)
+
+**Decision log:**
+2026-07-20 | App name: HabitLoop | HabitLoop, HabitForge, DailyPulse, Streakly | Matches project folder
+2026-07-20 | License: MIT | MIT vs GPLv3 | Permissive, minimal obligations
+2026-07-20 | Repo visibility: Public | Public vs Private | Matches open-source goal
+2026-07-20 | Android SDK moved to C:\Android\sdk | Original path had spaces breaking NDK | Fixed during setup
+
+## 3. Current Status Snapshot
+- [x] **Phase 0 — Setup**: Environment confirmed, repo created, app scaffolded
+- [ ] **Phase 1 — Core App** (Steps 1-10): Not started
+  - [ ] Step 1: Scaffold — default app runs
+  - [ ] Step 2: Data layer (Habit + Completion models + local DB)
+  - [ ] Step 3: Home screen (list + tap-to-complete)
+  - [ ] Step 4: Add/Edit habit screen
+  - [ ] Step 5: Streaks (current + best)
+  - [ ] Step 6: History view
+  - [ ] Step 7: Stats screen
+  - [ ] Step 8: Notifications
+  - [ ] Step 9: Settings
+  - [ ] Step 10: Polish pass
+- [ ] **Phase 2 — Monetization** (Steps 11-12)
+- [ ] **Phase 3 — Compliance & Release Prep**
+- [ ] **Phase 4 — Publishing**
+
+## 4. Feature Log
+(No features built yet — scaffolding just completed)
+
+## 5. Architecture Snapshot
+- **Folder structure**: Standard Flutter scaffold (`lib/main.dart`, `android/`, `ios/`, etc.)
+- **Data schema**: Not yet defined (Step 2)
+- **State management**: Not yet chosen (Step 2)
+
+## 6. Security & Privacy Checklist State
+- [ ] Never commit secrets (key.properties, *.jks, *.keystore, .env) — .gitignore updated
+- [ ] Minimize permissions (only POST_NOTIFICATIONS and RECEIVE_BOOT_COMPLETED)
+- [ ] Code obfuscation on release builds
+- [ ] Audit file I/O and network calls
+- [ ] Privacy policy drafted and hosted
+- [ ] Play Console Data Safety questionnaire completed
+
+## 7. Open Questions Awaiting the Human
+(None currently — will be added as they arise)
+
+## 8. Known Issues & Technical Debt
+- Android SDK was copied to `C:\Android\sdk` to avoid path-with-spaces issue. The original SDK at `C:\Users\Shahab Ahmed\AppData\Local\Android\sdk` still exists — can be cleaned up later.
+- `gh` CLI not in PATH — must use full path `C:\Program Files\GitHub CLI\gh.exe`
+
+## 9. Changelog
+2026-07-20 | Initial setup: Flutter scaffolded, GitHub repo created, AGENTS.md/AI_HANDOFF.md created
+
+## 10. Next Steps
+1. **Immediate**: Run the default Flutter app on emulator (Phase 1, Step 1)
+2. **Then**: Choose DB engine (sqflite vs Isar) and build data layer (Step 2)
+3. **After that**: Home screen with tap-to-complete (Step 3)
+
+## 11. Operating Rules for Any AI Working on This Project
+
+### Prime Directives
+1. Never state or write anything as fact that you haven't verified.
+2. Follow the guide's architecture and build order. Section 7 is the spine.
+3. Never silently remove, weaken, or "simplify away" something that already works.
+4. Test before you move on, commit after every working feature, and never claim something is "done" that you haven't actually run and watched work.
+5. Ask when a decision is genuinely someone else's to make.
+
+### Operating Principles
+- Correct and stable beats fast.
+- Follow the guide's documented choice unless you have a specific, articulable reason to deviate.
+- Simple and boring beats clever.
+- One feature per work session. Test after every change. Commit after every working feature.
+- Read your own diff before committing — watch for unexpected network calls, new AndroidManifest entries, and file writes outside app storage.
